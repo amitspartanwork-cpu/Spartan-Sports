@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — Spartan Sports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <header class="nav">
+    <a class="logo" href="index.html" aria-label="Spartan Sports home">
+      <img class="brand-mark" src="spartan-logo.png" alt="">
+      <span>Spartan Sports</span>
+    </a>
+  </header>
+
+  <!-- ===== LOGIN CARD ===== -->
+  <main class="auth-page">
+    <div class="auth-card">
+      <h2>Welcome back</h2>
+      <p class="sub">Sign in to access the inventory system.</p>
+
+      <!-- Role tabs -->
+      <div class="role-tabs" role="tablist" aria-label="Login as">
+        <button class="active" data-role="user"  id="tabUser"  role="tab" aria-selected="true"  onclick="setRole('user')">👤 User</button>
+        <button             data-role="admin" id="tabAdmin" role="tab" aria-selected="false" onclick="setRole('admin')">🛡️ Admin</button>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" id="loginAlert" role="alert"></div>
+
+      <!-- Form -->
+      <form id="loginForm" novalidate>
+
+        <div class="form-group">
+          <label for="loginEmail">Email address</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPass">Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle" aria-label="Toggle password visibility" onclick="togglePw('loginPass', this)">👁</button>
+          </div>
+        </div>
+
+        <!-- Admin secret key (shown only for admin tab) -->
+        <div class="form-group" id="adminKeyGroup">
+          <label for="loginAdminKey">Admin secret key</label>
+          <div class="pw-wrap">
+            <input type="password" id="loginAdminKey" placeholder="Enter admin key" autocomplete="off">
+            <button type="button" class="pw-toggle" aria-label="Toggle key visibility" onclick="togglePw('loginAdminKey', this)">👁</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-full">Sign in →</button>
+      </form>
+
+      <div class="divider">or</div>
+
+      <!-- Excel import shortcut for returning users -->
+      <div class="import-section">
+        <h3>📂 Import existing data</h3>
+        <p>Already have your inventory in an Excel file? Drop it here to continue where you left off — no login needed for a quick preview.</p>
+
+        <div class="file-drop" id="dropZone">
+          <div class="drop-icon">📊</div>
+          <div class="drop-text">Drop <strong>.xlsx / .xls / .csv</strong> here, or click to browse</div>
+          <input type="file" id="importFile" accept=".xlsx,.xls,.csv" aria-label="Choose Excel file">
+        </div>
+
+        <div class="import-preview" id="importPreview" hidden></div>
+
+        <div class="import-actions" id="importActions" style="display:none">
+          <button class="btn-full" id="loadDataBtn" type="button">✅ Load this data &amp; continue</button>
+          <button class="btn-full alt" id="clearImportBtn" type="button">✖ Clear</button>
+        </div>
+      </div>
+
+      <p class="switch-link">Don't have an account? <a href="register.html">Create one</a></p>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="xlsx.full.min.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
