@@ -1,7 +1,6 @@
 # PHP and MySQL setup
 
-The sign-in, account management, and shared inventory features use PHP sessions and MySQL. Live Server alone cannot run the PHP API.
-Old browser-only demo credentials are not used by this server-backed version.
+The sign-in, account management, and shared inventory features use PHP sessions and MySQL. Live Server and the GitHub Pages preview serve only static files and cannot run the PHP API; the Pages preview uses sample data.
 
 1. In XAMPP, start **Apache** and **MySQL**.
 2. Make the project available under Apache's document root (for example, `C:\xampp\htdocs\spartan-workweb`) while preserving the `files (2)` folder.

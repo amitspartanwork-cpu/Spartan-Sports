@@ -15,3 +15,7 @@ A web app for managing raw-material stock, production planning, and procurement.
 The sign-in and shared inventory features require PHP with PDO MySQL and a MySQL database. Live Server alone only serves static files and cannot run the PHP API.
 
 Follow [PHP-SETUP.md](./PHP-SETUP.md) to configure the database, create the private setup key, and create the first administrator. Public self-registration is disabled; administrators create accounts.
+
+## Public preview
+
+[Open the static preview](https://amitspartanwork-cpu.github.io/Storage-input-/). It uses sample data; sign-in, imports, and shared saving require a PHP/MySQL server.

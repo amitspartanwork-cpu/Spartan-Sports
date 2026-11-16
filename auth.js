@@ -1,6 +1,7 @@
 "use strict";
 
 const INVENTORY_API = "files (2)/inventory_api.php";
+const STATIC_PREVIEW = location.hostname.endsWith(".github.io");
 
 async function apiRequest(action, options) {
   const request = options || {};
@@ -109,6 +110,19 @@ async function initLoginPage() {
 async function initInventoryPage() {
   const status = document.getElementById("authStatus");
   document.getElementById("navSignout")?.addEventListener("click", doSignOut);
+  if (STATIC_PREVIEW) {
+    ["navAdmin", "navAuth", "navSignout"].forEach(id => {
+      const link = document.getElementById(id);
+      if (link) link.hidden = true;
+    });
+    if (status) {
+      status.textContent = "Public preview with sample data. Sign-in, imports, and shared saving require PHP/MySQL.";
+    }
+    const main = document.getElementById("siteMain");
+    if (main) main.hidden = false;
+    return;
+  }
+
   try {
     const session = await apiRequest("me");
     if (!session.user) {
