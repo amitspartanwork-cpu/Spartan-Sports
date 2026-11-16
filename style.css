@@ -8,7 +8,7 @@
     --ok: #5fae6b;
     --warn: #e0a33a;
     --bad: #e5604f;
-    --serif: "Cinzel", "Trajan Pro", Georgia, serif;
+    --serif: Georgia, "Trajan Pro", "Times New Roman", serif;
     --sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif
 }
 
@@ -211,7 +211,9 @@ select {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 60px;
+    align-content: center;
+    flex-wrap: wrap;
+    gap: 30px 60px;
     padding-bottom: 30px
 }
 

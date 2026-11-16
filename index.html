@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Spartan Sports | Raw Material Inventory</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <header class="nav">
-    <a class="logo" href="#top" aria-label="Spartan Sports home"><img class="brand-mark" src="spartan-logo.png" alt=""><span>Spartan Sports</span></a>
+    <a class="logo" href="#top" aria-label="Spartan Sports home"><img class="brand-mark" src="spartan-logo.png"
+        alt=""><span>Spartan Sports</span></a>
     <nav>
       <a href="#inventory">Inventory</a>
       <a href="#planner">Production check</a>
       <a href="#orders">Materials required</a>
-      <span id="navUser" style="opacity:.8;font-size:.9rem"></span>
-      <a href="admin-dashboard.html" id="navAdmin" style="display:none;color:var(--bronze)">🛡️ Admin panel</a>
-      <a href="#" id="navSignout" style="display:none" onclick="doSignOut(event)">Sign out</a>
-      <a href="login.html" id="navLogin">Sign in</a>
-      <a href="register.html" id="navRegister">Register</a>
+      <a href="admin-dashboard.html" id="navAdmin" style="display:none;color:var(--bronze)">Admin panel</a>
+      <a href="login.html" id="navAuth" style="opacity:.6;font-size:.85rem;margin-left:.5rem"
+        title="Sign in">Sign in</a>
+      <a href="#" id="navSignout" style="display:none">Sign out</a>
     </nav>
   </header>
 
-  <main id="top">
-    <section class="hero">
+  <p id="authStatus" role="status" style="max-width:1100px;margin:2rem auto;padding:0 2rem">Checking sign-in and loading inventory…</p>
+  <main id="siteMain" hidden>
+    <section class="hero" id="top">
       <div class="hero-text">
         <h1>Know what is in the warehouse before you start the line.</h1>
         <p>Check raw material stock, see what each product needs, and get the list of what to order.</p>
-        <div class="cta"><a class="btn" href="#inventory">Check inventory</a><a class="btn alt" href="#planner">Plan production</a></div>
+        <div class="cta"><a class="btn" href="#inventory">Check inventory</a><a class="btn alt" href="#planner">Plan
+            production</a></div>
         <div class="kpis">
           <div><b id="kTotal">0</b> materials</div>
           <div><b id="kShort">0</b> short</div>
@@ -46,7 +48,9 @@
       <h2>Raw material inventory</h2>
       <div class="toolbar">
         <input id="q" type="search" placeholder="Search materials" aria-label="Search materials">
-        <select id="cat" aria-label="Category"><option value="">All categories</option></select>
+        <select id="cat" aria-label="Category">
+          <option value="">All categories</option>
+        </select>
         <div class="chips" id="chips">
           <button class="chip on" data-s="">All</button>
           <button class="chip" data-s="short">Short</button>
@@ -67,71 +71,50 @@
           <label for="qty">Quantity to make</label><input id="qty" type="number" min="1" value="50">
           <p class="verdict" id="verdict"></p>
         </div>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Material</th><th>Required</th><th>In stock</th><th>Result</th></tr></thead>
-          <tbody id="planBody"></tbody>
-        </table></div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Required</th>
+                <th>In stock</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="planBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <section id="orders" class="block">
       <h2>Materials required</h2>
       <p class="sub">Materials where stock is below what open orders need.</p>
-      <div class="table-scroll"><table>
-        <thead><tr><th>Material</th><th>Order at least</th><th>Estimated cost</th></tr></thead>
-        <tbody id="ordBody"></tbody>
-      </table></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Order at least</th>
+              <th>Estimated cost</th>
+            </tr>
+          </thead>
+          <tbody id="ordBody"></tbody>
+        </table>
+      </div>
       <p class="empty" id="ordEmpty" hidden>Nothing to order. Stock covers every open order.</p>
-      <div class="ord-foot"><strong id="ordTotal"></strong><div class="actions">
-        <button class="btn alt" id="excelBtn" type="button">Download Excel workbook (.xlsx)</button>
-        <button class="btn" id="copyBtn" type="button">Copy order list</button>
-      </div></div>
+      <div class="ord-foot"><strong id="ordTotal"></strong>
+        <div class="actions">
+          <button class="btn alt" id="excelBtn" type="button">Download Excel workbook (.xlsx)</button>
+          <button class="btn" id="copyBtn" type="button">Copy order list</button>
+        </div>
+      </div>
     </section>
   </main>
   <div class="toast" id="toast" role="status"></div>
   <script src="xlsx.full.min.js"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
-  <script>
-  // ── Session banner & import loader ──────────────────────
-  (function initSession() {
-    const sess = getSession();
-    const navUser     = document.getElementById("navUser");
-    const navAdmin    = document.getElementById("navAdmin");
-    const navSignout  = document.getElementById("navSignout");
-    const navLogin    = document.getElementById("navLogin");
-    const navRegister = document.getElementById("navRegister");
-
-    if (sess) {
-      if (navUser)     navUser.textContent = "👋 " + sess.name + (sess.role === "admin" ? " (Admin)" : "");
-      if (navSignout)  navSignout.style.display = "inline";
-      if (navLogin)    navLogin.style.display = "none";
-      if (navRegister) navRegister.style.display = "none";
-      if (sess.role === "admin" && navAdmin) navAdmin.style.display = "inline";
-    }
-
-    // Load imported inventory if available
-    const imp = localStorage.getItem("ss_inventory_import");
-    if (imp) {
-      try {
-        const rows = JSON.parse(imp);
-        if (Array.isArray(rows) && rows.length) {
-          // Replace global M array
-          M.length = 0;
-          rows.forEach(r => M.push(r));
-          byKey_refresh();
-          render(); plan(); updateKPIs(); updateOrders();
-          toast("Inventory loaded from imported data (" + rows.length + " materials)");
-        }
-      } catch (e) { console.warn("Failed to load imported inventory", e); }
-    }
-  })();
-
-  function doSignOut(e) {
-    e.preventDefault();
-    sessionStorage.removeItem("ss_session");
-    window.location.href = "login.html";
-  }
-  </script>
 </body>
+
 </html>

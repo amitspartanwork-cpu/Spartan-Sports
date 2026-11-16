@@ -1,5 +1,8 @@
 const $ = s => document.querySelector(s);
 const fmt = n => +n.toFixed(2);
+const escapeMarkup = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+})[char]);
 
 /* Rebuild byKey lookup after M is replaced */
 function byKey_refresh() {
@@ -9,7 +12,7 @@ function byKey_refresh() {
   const cat = $("#cat");
   if (cat) {
     cat.innerHTML = '<option value="">All categories</option>';
-    [...new Set(M.map(m => m.cat))].forEach(c => cat.insertAdjacentHTML("beforeend", `<option>${c}</option>`));
+    [...new Set(M.map(m => m.cat))].forEach(c => cat.insertAdjacentHTML("beforeend", `<option>${escapeMarkup(c)}</option>`));
   }
   // Rebuild product planner
   const prod = $("#prod");
@@ -28,10 +31,23 @@ function updateKPIs() {
 
 function updateOrders() {
   const short = M.filter(m => m.stock < m.need);
-  if ($("#ordBody")) $("#ordBody").innerHTML = short.map(m => `<tr><td>${m.name}</td><td>${m.need - m.stock} ${m.unit}</td><td>₹${((m.need - m.stock) * m.price).toLocaleString("en-IN")}</td></tr>`).join("");
+  if ($("#ordBody")) $("#ordBody").innerHTML = short.map(m => `<tr><td>${escapeMarkup(m.name)}</td><td>${m.need - m.stock} ${escapeMarkup(m.unit)}</td><td>₹${((m.need - m.stock) * m.price).toLocaleString("en-IN")}</td></tr>`).join("");
   if ($("#ordEmpty")) $("#ordEmpty").hidden = short.length > 0;
   const total = short.reduce((s, m) => s + (m.need - m.stock) * m.price, 0);
   if ($("#ordTotal")) $("#ordTotal").textContent = short.length ? `Estimated total: ₹${total.toLocaleString("en-IN")}` : "";
+}
+
+function refreshInventory(rows) {
+  if (!Array.isArray(rows) || rows.some(m => !m || !m.key || !m.name)) {
+    throw new Error("The server returned invalid inventory data.");
+  }
+  M.splice(0, M.length, ...rows);
+  byKey_refresh();
+  render();
+  plan();
+  updateKPIs();
+  updateOrders();
+  renderCubes();
 }
 
 /* Stock = what is in the warehouse. need = required for open orders. */
@@ -67,11 +83,11 @@ function render() {
   $("#grid").innerHTML = list.map(m => {
     const st = status(m), pct = Math.min(100, m.stock / (m.need * 1.5) * 100);
     return `<article class="card ${st}">
-      <h3>${m.name}</h3><p class="cat">${m.cat}</p>
-      <div class="big">${m.stock} <small>${m.unit}</small></div>
+      <h3>${escapeMarkup(m.name)}</h3><p class="cat">${escapeMarkup(m.cat)}</p>
+      <div class="big">${m.stock} <small>${escapeMarkup(m.unit)}</small></div>
       <div class="bar"><i style="width:${pct}%"></i></div>
-      <p class="meta">Needed for open orders: ${m.need} ${m.unit}</p>
-      <span class="pill ${st}">${LABEL[st]}${st === "short" ? " by " + (m.need - m.stock) + " " + m.unit : ""}</span></article>`;
+      <p class="meta">Needed for open orders: ${m.need} ${escapeMarkup(m.unit)}</p>
+      <span class="pill ${st}">${LABEL[st]}${st === "short" ? " by " + (m.need - m.stock) + " " + escapeMarkup(m.unit) : ""}</span></article>`;
   }).join("");
   $("#empty").hidden = list.length > 0;
   tilt();
@@ -107,8 +123,8 @@ function plan() {
   for (const k in p.use) {
     const m = byKey[k], need = p.use[k] * n;
     can = Math.min(can, Math.floor(m.stock / p.use[k]));
-    rows += `<tr><td>${m.name}</td><td>${fmt(need)} ${m.unit}</td><td>${m.stock} ${m.unit}</td>
-      <td class="${need <= m.stock ? "okc" : "shortc"}">${need <= m.stock ? "Enough" : "Short by " + fmt(need - m.stock) + " " + m.unit}</td></tr>`;
+    rows += `<tr><td>${escapeMarkup(m.name)}</td><td>${fmt(need)} ${escapeMarkup(m.unit)}</td><td>${m.stock} ${escapeMarkup(m.unit)}</td>
+      <td class="${need <= m.stock ? "okc" : "shortc"}">${need <= m.stock ? "Enough" : "Short by " + fmt(need - m.stock) + " " + escapeMarkup(m.unit)}</td></tr>`;
   }
   $("#planBody").innerHTML = rows;
   const v = $("#verdict"), ok = can >= n;
@@ -150,8 +166,9 @@ $("#excelBtn").onclick = () => {
   }
 };
 $("#copyBtn").onclick = () => {
-  if (!short.length) return toast("Nothing to order");
-  const text = "Spartan Sports order list\n" + short.map(m => `- ${m.name}: ${m.need - m.stock} ${m.unit}`).join("\n");
+  const itemsToOrder = M.filter(m => m.stock < m.need);
+  if (!itemsToOrder.length) return toast("Nothing to order");
+  const text = "Spartan Sports order list\n" + itemsToOrder.map(m => `- ${m.name}: ${m.need - m.stock} ${m.unit}`).join("\n");
   (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast("Order list copied"), () => toast("Copy failed. Select the table instead."));
 };
 
@@ -161,16 +178,21 @@ $("#kShort").textContent = short.length;
 $("#kValue").textContent = M.reduce((s, m) => s + m.stock * m.price, 0).toLocaleString("en-IN");
 
 /* ---------- 3D crates ---------- */
-const cats = ["Leather", "Rubber", "Wood"];
-$("#cubes").innerHTML = cats.map(c => {
-  const items = M.filter(m => m.cat === c), n = items.filter(m => m.stock < m.need).length;
-  const side = `${c}<small>${n ? n + " short" : "All enough"}</small>`;
-  return `<div class="cube ${n ? "bad" : "good"}" data-cat="${c}">
-    ${[0, 1, 2, 3].map(i => `<div class="face f${i}">${i % 2 ? side : c + "<small>" + items.length + " material" + (items.length > 1 ? "s" : "") + "</small>"}</div>`).join("")}
-    <div class="face f4"></div><div class="face f5"></div></div>`;
-}).join("");
+let cubes = [];
+function renderCubes() {
+  const cats = [...new Set(M.map(m => m.cat))];
+  $("#cubes").innerHTML = cats.map(c => {
+    const items = M.filter(m => m.cat === c), n = items.filter(m => m.stock < m.need).length;
+    const safeCategory = escapeMarkup(c);
+    const side = `${safeCategory}<small>${n ? n + " short" : "All enough"}</small>`;
+    return `<div class="cube ${n ? "bad" : "good"}" data-cat="${safeCategory}">
+      ${[0, 1, 2, 3].map(i => `<div class="face f${i}">${i % 2 ? side : safeCategory + "<small>" + items.length + " material" + (items.length > 1 ? "s" : "") + "</small>"}</div>`).join("")}
+      <div class="face f4"></div><div class="face f5"></div></div>`;
+  }).join("");
+  cubes = [...document.querySelectorAll(".cube")];
+}
 
-const cubes = [...document.querySelectorAll(".cube")];
+renderCubes();
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let ry = -25, rx = -18, drag = null;
 (function loop() {
@@ -195,3 +217,5 @@ addEventListener("pointerup", () => {
 });
 
 render(); plan();
+window.refreshInventory = refreshInventory;
+if (typeof initInventoryPage === "function") initInventoryPage();

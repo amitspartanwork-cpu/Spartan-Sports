@@ -3,15 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login — Spartan Sports</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Sign in | Spartan Sports</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="auth.css">
 </head>
 <body>
-
-  <!-- ===== NAV ===== -->
   <header class="nav">
     <a class="logo" href="index.html" aria-label="Spartan Sports home">
       <img class="brand-mark" src="spartan-logo.png" alt="">
@@ -19,77 +15,53 @@
     </a>
   </header>
 
-  <!-- ===== LOGIN CARD ===== -->
   <main class="auth-page">
-    <div class="auth-card">
-      <h2>Welcome back</h2>
-      <p class="sub">Sign in to access the inventory system.</p>
-
-      <!-- Role tabs -->
-      <div class="role-tabs" role="tablist" aria-label="Login as">
-        <button class="active" data-role="user"  id="tabUser"  role="tab" aria-selected="true"  onclick="setRole('user')">👤 User</button>
-        <button             data-role="admin" id="tabAdmin" role="tab" aria-selected="false" onclick="setRole('admin')">🛡️ Admin</button>
-      </div>
-
-      <!-- Alert -->
-      <div class="alert" id="loginAlert" role="alert"></div>
-
-      <!-- Form -->
-      <form id="loginForm" novalidate>
-
+    <section class="auth-card" id="loginPanel" hidden>
+      <h1>Welcome back</h1>
+      <p class="sub">Sign in to view the shared raw-material inventory.</p>
+      <div class="alert" id="loginAlert" role="alert" aria-live="polite"></div>
+      <form id="loginForm">
         <div class="form-group">
           <label for="loginEmail">Email address</label>
-          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required>
+          <input type="email" id="loginEmail" autocomplete="username" required>
         </div>
-
         <div class="form-group">
           <label for="loginPass">Password</label>
-          <div class="pw-wrap">
-            <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required>
-            <button type="button" class="pw-toggle" aria-label="Toggle password visibility" onclick="togglePw('loginPass', this)">👁</button>
-          </div>
+          <input type="password" id="loginPass" autocomplete="current-password" required>
         </div>
-
-        <!-- Admin secret key (shown only for admin tab) -->
-        <div class="form-group" id="adminKeyGroup">
-          <label for="loginAdminKey">Admin secret key</label>
-          <div class="pw-wrap">
-            <input type="password" id="loginAdminKey" placeholder="Enter admin key" autocomplete="off">
-            <button type="button" class="pw-toggle" aria-label="Toggle key visibility" onclick="togglePw('loginAdminKey', this)">👁</button>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-full">Sign in →</button>
+        <button type="submit" class="btn-full">Sign in</button>
       </form>
+      <p class="switch-link">Accounts are created by an administrator.</p>
+    </section>
 
-      <div class="divider">or</div>
-
-      <!-- Excel import shortcut for returning users -->
-      <div class="import-section">
-        <h3>📂 Import existing data</h3>
-        <p>Already have your inventory in an Excel file? Drop it here to continue where you left off — no login needed for a quick preview.</p>
-
-        <div class="file-drop" id="dropZone">
-          <div class="drop-icon">📊</div>
-          <div class="drop-text">Drop <strong>.xlsx / .xls / .csv</strong> here, or click to browse</div>
-          <input type="file" id="importFile" accept=".xlsx,.xls,.csv" aria-label="Choose Excel file">
+    <section class="auth-card" id="setupPanel" hidden>
+      <h1>Set up administrator</h1>
+      <p class="sub">Create the first administrator account. This form is disabled after setup.</p>
+      <p class="form-help">Before continuing, set a private <code>setup_key</code> in <code>files (2)/config.php</code>, then enter it below.</p>
+      <div class="alert" id="setupAlert" role="alert" aria-live="polite"></div>
+      <form id="setupForm">
+        <div class="form-group">
+          <label for="setupName">Name</label>
+          <input type="text" id="setupName" autocomplete="name" maxlength="120" required>
         </div>
-
-        <div class="import-preview" id="importPreview" hidden></div>
-
-        <div class="import-actions" id="importActions" style="display:none">
-          <button class="btn-full" id="loadDataBtn" type="button">✅ Load this data &amp; continue</button>
-          <button class="btn-full alt" id="clearImportBtn" type="button">✖ Clear</button>
+        <div class="form-group">
+          <label for="setupEmail">Email address</label>
+          <input type="email" id="setupEmail" autocomplete="email" maxlength="190" required>
         </div>
-      </div>
-
-      <p class="switch-link">Don't have an account? <a href="register.html">Create one</a></p>
-    </div>
+        <div class="form-group">
+          <label for="setupPassword">Password (at least 10 characters)</label>
+          <input type="password" id="setupPassword" autocomplete="new-password" minlength="10" required>
+        </div>
+        <div class="form-group">
+          <label for="setupKey">One-time setup key</label>
+          <input type="password" id="setupKey" autocomplete="off" required>
+        </div>
+        <button type="submit" class="btn-full">Create administrator</button>
+      </form>
+    </section>
   </main>
 
   <div class="toast" id="toast" role="status"></div>
-
-  <script src="xlsx.full.min.js"></script>
   <script src="auth.js"></script>
 </body>
 </html>

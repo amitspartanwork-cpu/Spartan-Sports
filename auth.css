@@ -124,6 +124,8 @@ button, input, select { font: inherit; }
   color: var(--bone);
   transition: border-color .2s;
 }
+.form-help { font-size: .85rem; opacity: .75; line-height: 1.5; }
+.form-help code { color: var(--bronze); }
 .form-group input:focus, .form-group select:focus {
   outline: 3px solid var(--bronze);
   outline-offset: 2px;
@@ -275,6 +277,7 @@ button, input, select { font: inherit; }
   display: flex; gap: .6rem; flex-wrap: wrap;
   margin-top: .9rem;
 }
+.import-actions[hidden], .import-preview[hidden] { display: none; }
 
 /* ---- Toast ---- */
 .toast {
