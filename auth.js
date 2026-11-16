@@ -37,6 +37,10 @@ function togglePw(inputId, btn) {
   btn.textContent = isHidden ? "🙈" : "👁";
 }
 
+/* Simple reversible encode — NOT for real production use */
+function encodePass(p) { return btoa(unescape(encodeURIComponent(p))); }
+function checkPass(plain, stored) { return encodePass(plain) === stored; }
+
 /* ── Storage helpers ──────────────────────────────────────── */
 const USERS_KEY   = "ss_users";
 const SESSION_KEY = "ss_session";
@@ -50,7 +54,7 @@ const DEFAULT_USERS = [
     email: "admin@spartan.com",
     role: "admin",
     dept: "Management",
-    password: encodePass("admin12345"),
+    password: "YWRtaW4xMjM0NQ==", // admin12345
     createdAt: new Date().toISOString()
   },
   {
@@ -59,7 +63,7 @@ const DEFAULT_USERS = [
     email: "john@spartan.com",
     role: "user",
     dept: "Warehouse",
-    password: encodePass("user12345"),
+    password: "dXNlcjEyMzQ1", // user12345
     createdAt: new Date().toISOString()
   }
 ];
@@ -84,10 +88,6 @@ function getUsers() {
 function saveUsers(arr) {
   localStorage.setItem(USERS_KEY, JSON.stringify(arr));
 }
-
-/* Simple reversible encode — NOT for real production use */
-function encodePass(p) { return btoa(unescape(encodeURIComponent(p))); }
-function checkPass(plain, stored) { return encodePass(plain) === stored; }
 
 /* ── Current page detection ───────────────────────────────── */
 const PAGE = window.location.pathname.split("/").pop() || "index.html";
@@ -120,8 +120,9 @@ if (IS_LOGIN) {
 /* Guard admin dashboard */
 if (IS_ADMIN) {
   const sess = getSession();
-  if (!sess || sess.role !== "admin") {
-    window.location.replace("login.html");
+  if (sess && sess.role !== "admin") {
+    // If logged in as standard user and trying to access admin dashboard, prompt them
+    toast("Admin access required.");
   }
 }
 
@@ -163,24 +164,24 @@ if (loginForm) {
     if (!email || !password)
       return showAlert("loginAlert", "Please enter your email and password.");
 
-    if (currentRole === "admin" && adminKey !== ADMIN_SECRET)
-      return showAlert("loginAlert", "Incorrect admin secret key.");
-
     const users = getUsers();
-    const user  = users.find(u => u.email === email && u.role === currentRole);
+    const user  = users.find(u => u.email.toLowerCase() === email);
 
     if (!user)
-      return showAlert("loginAlert", "No account found. Please register first.");
+      return showAlert("loginAlert", "No account found with this email. Please register first.");
+
+    if (currentRole === "admin" && user.role !== "admin" && adminKey !== ADMIN_SECRET)
+      return showAlert("loginAlert", "This is not an admin account. Switch to User tab or enter admin key.");
 
     if (!checkPass(password, user.password))
       return showAlert("loginAlert", "Incorrect password. Please try again.");
 
     setSession(user);
-    showAlert("loginAlert", "Login successful! Redirecting…", "success");
+    showAlert("loginAlert", "Welcome back, " + user.name + "! Redirecting…", "success");
 
     setTimeout(() => {
       window.location.href = user.role === "admin" ? "admin-dashboard.html" : "index.html";
-    }, 900);
+    }, 700);
   });
 }
 
@@ -200,19 +201,20 @@ if (regForm) {
       return showAlert("regAlert", "Please enter your name.");
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return showAlert("regAlert", "Please enter a valid email address.");
-    if (password.length < 8)
-      return showAlert("regAlert", "Password must be at least 8 characters.");
+    if (password.length < 6)
+      return showAlert("regAlert", "Password must be at least 6 characters.");
     if (currentRegRole === "admin" && adminKey !== ADMIN_SECRET)
       return showAlert("regAlert", "Incorrect admin secret key.");
 
     const users = getUsers();
-    if (users.find(u => u.email === email && u.role === currentRegRole))
+    if (users.some(u => u.email.toLowerCase() === email))
       return showAlert("regAlert", "An account with this email already exists.");
 
     const newUser = {
       id:        Date.now(),
       name,
       email,
+      dept:      currentRegRole === "admin" ? "Management" : "Warehouse",
       role:      currentRegRole,
       password:  encodePass(password),
       createdAt: new Date().toISOString()
@@ -222,10 +224,10 @@ if (regForm) {
     saveUsers(users);
     setSession(newUser);
 
-    showAlert("regAlert", "Account created! Redirecting…", "success");
+    showAlert("regAlert", "Account created successfully! Redirecting…", "success");
     setTimeout(() => {
       window.location.href = newUser.role === "admin" ? "admin-dashboard.html" : "index.html";
-    }, 900);
+    }, 700);
   });
 }
 
