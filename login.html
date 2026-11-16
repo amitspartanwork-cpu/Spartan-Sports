@@ -59,9 +59,50 @@
         <button type="submit" class="btn-full">Create administrator</button>
       </form>
     </section>
+
+    <section class="auth-card demo-login-card" id="demoLoginPanel" hidden>
+      <h1>Welcome back</h1>
+      <p class="sub">Sign in to access the inventory system.</p>
+      <p class="demo-notice">Presentation demo only. No account is checked and no password is saved.</p>
+      <div class="role-tabs" role="group" aria-label="Choose demo role">
+        <button type="button" class="active" data-demo-role="user" aria-pressed="true">♟ User</button>
+        <button type="button" data-demo-role="admin" aria-pressed="false">🛡 Admin</button>
+      </div>
+      <form id="demoLoginForm">
+        <input id="demoRole" type="hidden" value="user">
+        <div class="form-group">
+          <label for="demoEmail">Email address</label>
+          <input type="email" id="demoEmail" autocomplete="off" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="demoPassword">Password</label>
+          <input type="password" id="demoPassword" autocomplete="off" placeholder="Demo only" required>
+        </div>
+        <button type="submit" class="btn-full" id="demoLoginButton">Sign in →</button>
+      </form>
+
+      <div class="divider">or</div>
+      <section class="import-section">
+        <h3>📂 Import existing data</h3>
+        <p>Load a previous Excel or CSV file into this browser's preview. It is not uploaded or shared.</p>
+        <div class="file-drop" id="dropZoneAdmin">
+          <div class="drop-icon" aria-hidden="true">📊</div>
+          <div class="drop-text">Drop .xlsx / .xls / .csv here, or click to browse</div>
+          <input type="file" id="importFileAdmin" accept=".xlsx,.xls,.csv" aria-label="Choose previous inventory spreadsheet">
+        </div>
+        <div class="import-preview" id="importPreviewAdmin" hidden></div>
+        <div class="import-actions" id="importActionsAdmin" hidden>
+          <button class="btn-full" id="applyImportBtn" type="button">Load into browser preview</button>
+          <button class="btn-full alt" id="clearImportAdminBtn" type="button">Clear file</button>
+        </div>
+        <div class="alert" id="demoImportAlert" role="status" aria-live="polite"></div>
+      </section>
+      <p class="switch-link">No account needed for this presentation preview.</p>
+    </section>
   </main>
 
   <div class="toast" id="toast" role="status"></div>
+  <script src="xlsx.full.min.js"></script>
   <script src="auth.js"></script>
 </body>
 </html>

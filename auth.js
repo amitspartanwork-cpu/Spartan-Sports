@@ -2,6 +2,23 @@
 
 const INVENTORY_API = "files (2)/inventory_api.php";
 const STATIC_PREVIEW = location.hostname.endsWith(".github.io");
+const PREVIEW_STORAGE_KEY = "spartan-sports-preview-inventory";
+const DEMO_MATERIAL_KEYS = new Map([
+  ["cowhide leather", "leather"],
+  ["natural rubber", "rubber"],
+  ["english willow clefts", "willow"],
+  ["ash wood billets", "ash"],
+  ["stainless steel wire", "steel"],
+  ["polyester mesh", "mesh"]
+]);
+const DEFAULT_PREVIEW_INVENTORY = [
+  { key: "leather", name: "Cowhide leather", cat: "Leather", stock: 120, need: 90, unit: "sq m", price: 850 },
+  { key: "rubber", name: "Natural rubber", cat: "Rubber", stock: 40, need: 55, unit: "kg", price: 210 },
+  { key: "willow", name: "English willow clefts", cat: "Wood", stock: 18, need: 25, unit: "pcs", price: 3200 },
+  { key: "ash", name: "Ash wood billets", cat: "Wood", stock: 60, need: 40, unit: "pcs", price: 650 },
+  { key: "steel", name: "Stainless steel wire", cat: "Metal", stock: 300, need: 200, unit: "m", price: 45 },
+  { key: "mesh", name: "Polyester mesh", cat: "Fabric", stock: 9, need: 8, unit: "rolls", price: 1200 }
+];
 
 async function apiRequest(action, options) {
   const request = options || {};
@@ -53,6 +70,15 @@ async function initLoginPage() {
   const setupPanel = document.getElementById("setupPanel");
   const loginForm = document.getElementById("loginForm");
   const setupForm = document.getElementById("setupForm");
+  if (STATIC_PREVIEW) {
+    loginPanel.hidden = true;
+    setupPanel.hidden = true;
+    document.getElementById("demoLoginPanel").hidden = false;
+    initDemoLoginPage();
+    initStaticDemoImport();
+    return;
+  }
+
   try {
     const state = await apiRequest("me");
     if (state.user) {
@@ -111,12 +137,26 @@ async function initInventoryPage() {
   const status = document.getElementById("authStatus");
   document.getElementById("navSignout")?.addEventListener("click", doSignOut);
   if (STATIC_PREVIEW) {
-    ["navAdmin", "navAuth", "navSignout"].forEach(id => {
+    const signIn = document.getElementById("navAuth");
+    if (signIn) signIn.textContent = "Demo sign in";
+    ["navAdmin", "navSignout"].forEach(id => {
       const link = document.getElementById(id);
       if (link) link.hidden = true;
     });
+    let previewMessage = "Presentation preview: sample data only. Demo login is not secure; imported data stays in this browser.";
+    try {
+      const saved = localStorage.getItem(PREVIEW_STORAGE_KEY);
+      if (saved !== null) {
+        const materials = JSON.parse(saved);
+        window.refreshInventory(materials);
+        previewMessage = "Presentation preview: imported data is stored only in this browser and is not shared.";
+      }
+    } catch (error) {
+      console.error("Could not load browser-only inventory data:", error);
+      previewMessage = "Could not load previous preview data. The sample inventory is shown instead.";
+    }
     if (status) {
-      status.textContent = "Public preview with sample data. Sign-in, imports, and shared saving require PHP/MySQL.";
+      status.textContent = previewMessage;
     }
     const main = document.getElementById("siteMain");
     if (main) main.hidden = false;
@@ -226,8 +266,8 @@ function parseInventorySheet(sheet) {
   return materials;
 }
 
-function renderImportPreview(materials) {
-  const preview = document.getElementById("importPreviewAdmin");
+function renderImportPreview(materials, previewId = "importPreviewAdmin", actionsId = "importActionsAdmin") {
+  const preview = document.getElementById(previewId);
   preview.replaceChildren();
   const summary = document.createElement("p");
   summary.textContent = `${materials.length} rows ready. Matching names will be updated; new names will be added.`;
@@ -250,12 +290,154 @@ function renderImportPreview(materials) {
   table.appendChild(body);
   preview.appendChild(table);
   preview.hidden = false;
-  document.getElementById("importActionsAdmin").hidden = false;
+  document.getElementById(actionsId).hidden = false;
+}
+
+function initDemoLoginPage() {
+  const roleInput = document.getElementById("demoRole");
+  const signInButton = document.getElementById("demoLoginButton");
+  document.querySelectorAll("[data-demo-role]").forEach(button => {
+    button.addEventListener("click", () => {
+      const isAdmin = button.dataset.demoRole === "admin";
+      roleInput.value = isAdmin ? "admin" : "user";
+      document.querySelectorAll("[data-demo-role]").forEach(tab => {
+        const active = tab === button;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-pressed", String(active));
+      });
+      signInButton.textContent = isAdmin ? "Open admin preview →" : "Open user preview →";
+    });
+  });
+  document.getElementById("demoLoginForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const role = roleInput.value;
+    location.assign(role === "admin" ? "admin-dashboard.html" : "index.html");
+  });
+}
+
+function staticPreviewRows(materials) {
+  return materials.map((material, index) => {
+    const nameKey = material.name.toLowerCase();
+    const slug = nameKey.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || `material-${index + 1}`;
+    return {
+      key: DEMO_MATERIAL_KEYS.get(nameKey) || `import-${slug}-${index + 1}`,
+      name: material.name,
+      cat: material.cat,
+      stock: material.stock,
+      need: material.need,
+      unit: material.unit,
+      price: material.price
+    };
+  });
+}
+
+function readStaticPreviewRows() {
+  const saved = localStorage.getItem(PREVIEW_STORAGE_KEY);
+  if (saved === null) return DEFAULT_PREVIEW_INVENTORY.map(row => ({ ...row }));
+  const rows = JSON.parse(saved);
+  if (!Array.isArray(rows) || rows.some(row => !row || typeof row.key !== "string"
+    || typeof row.name !== "string" || typeof row.cat !== "string" || typeof row.unit !== "string"
+    || !Number.isFinite(row.stock) || !Number.isFinite(row.need) || !Number.isFinite(row.price))) {
+    throw new Error("Saved preview data is invalid. Clear it and import the spreadsheet again.");
+  }
+  return rows;
+}
+
+function mergeStaticPreviewRows(importedRows) {
+  const byName = new Map(readStaticPreviewRows().map(row => [row.name.trim().toLowerCase(), row]));
+  importedRows.forEach(row => {
+    const nameKey = row.name.trim().toLowerCase();
+    const current = byName.get(nameKey);
+    byName.set(nameKey, current ? { ...current, ...row, key: current.key } : row);
+  });
+  return [...byName.values()];
+}
+
+function initStaticDemoImport() {
+  const staticDashboard = document.getElementById("staticAdminDemo");
+  const ids = staticDashboard ? {
+    file: "demoImportFileAdmin",
+    drop: "demoDropZoneAdmin",
+    preview: "demoImportPreviewAdmin",
+    actions: "demoImportActionsAdmin",
+    apply: "demoApplyImportBtn",
+    clear: "demoClearImportAdminBtn"
+  } : {
+    file: "importFileAdmin",
+    drop: "dropZoneAdmin",
+    preview: "importPreviewAdmin",
+    actions: "importActionsAdmin",
+    apply: "applyImportBtn",
+    clear: "clearImportAdminBtn"
+  };
+  const fileInput = document.getElementById(ids.file);
+  const dropZone = document.getElementById(ids.drop);
+  if (!fileInput || !dropZone) return;
+
+  const messageId = document.getElementById("dashboardAlert") ? "dashboardAlert" : "demoImportAlert";
+  const selectFile = async file => {
+    if (!file) return;
+    try {
+      if (!/\.(xlsx|xls|csv)$/i.test(file.name)) throw new Error("Choose an .xlsx, .xls, or .csv file.");
+      if (file.size > 10 * 1024 * 1024) throw new Error("Spreadsheet files must be 10 MB or smaller.");
+      if (typeof XLSX === "undefined") throw new Error("The spreadsheet reader did not load. Reload and try again.");
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      window.pendingInventoryImport = parseInventorySheet(workbook.Sheets[workbook.SheetNames[0]]);
+      renderImportPreview(window.pendingInventoryImport, ids.preview, ids.actions);
+      showMessage(messageId, `${window.pendingInventoryImport.length} rows ready to load into this browser.`, true);
+    } catch (error) {
+      showMessage(messageId, error.message, false);
+    }
+  };
+
+  fileInput.addEventListener("change", () => selectFile(fileInput.files[0]));
+  dropZone.addEventListener("dragover", event => {
+    event.preventDefault();
+    dropZone.classList.add("over");
+  });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("over"));
+  dropZone.addEventListener("drop", event => {
+    event.preventDefault();
+    dropZone.classList.remove("over");
+    selectFile(event.dataTransfer.files[0]);
+  });
+  document.getElementById(ids.apply).addEventListener("click", () => {
+    if (!window.pendingInventoryImport?.length) return;
+    try {
+      const rows = mergeStaticPreviewRows(staticPreviewRows(window.pendingInventoryImport));
+      localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify(rows));
+      showMessage(messageId, `${rows.length} materials are ready in this browser's preview.`, true);
+    } catch (error) {
+      showMessage(messageId, `Could not save preview data: ${error.message}`, false);
+    }
+  });
+  document.getElementById(ids.clear).addEventListener("click", () => {
+    window.pendingInventoryImport = null;
+    fileInput.value = "";
+    document.getElementById(ids.preview).replaceChildren();
+    document.getElementById(ids.preview).hidden = true;
+    document.getElementById(ids.actions).hidden = true;
+    const message = document.getElementById(messageId);
+    message.className = "alert";
+    message.textContent = "";
+  });
 }
 
 async function initAdminDashboard() {
   const main = document.getElementById("dashMain");
-  document.getElementById("signoutBtn")?.addEventListener("click", doSignOut);
+  const signOutButton = document.getElementById("signoutBtn");
+  if (STATIC_PREVIEW) {
+    if (main) main.hidden = true;
+    const demoMain = document.getElementById("staticAdminDemo");
+    if (demoMain) demoMain.hidden = false;
+    signOutButton?.addEventListener("click", () => {
+      location.assign("login.html");
+    });
+    initStaticDemoImport();
+    return;
+  }
+
+  signOutButton?.addEventListener("click", doSignOut);
   try {
     const session = await apiRequest("me");
     if (!session.user) {

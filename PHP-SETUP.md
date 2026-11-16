@@ -1,6 +1,6 @@
 # PHP and MySQL setup
 
-The sign-in, account management, and shared inventory features use PHP sessions and MySQL. Live Server and the GitHub Pages preview serve only static files and cannot run the PHP API; the Pages preview uses sample data.
+The sign-in, account management, and shared inventory features use PHP sessions and MySQL. Live Server and the GitHub Pages preview serve only static files and cannot run the PHP API. The Pages demo login is not authentication; imported inventory is stored only in each visitor's browser.
 
 1. In XAMPP, start **Apache** and **MySQL**.
 2. Make the project available under Apache's document root (for example, `C:\xampp\htdocs\spartan-workweb`) while preserving the `files (2)` folder.

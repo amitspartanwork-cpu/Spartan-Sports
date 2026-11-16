@@ -38,8 +38,11 @@ function updateOrders() {
 }
 
 function refreshInventory(rows) {
-  if (!Array.isArray(rows) || rows.some(m => !m || !m.key || !m.name)) {
-    throw new Error("The server returned invalid inventory data.");
+  if (!Array.isArray(rows) || !rows.length || rows.some(m => !m || typeof m.key !== "string"
+    || !m.key || typeof m.name !== "string" || !m.name || typeof m.cat !== "string"
+    || typeof m.unit !== "string" || !Number.isFinite(m.stock) || m.stock < 0
+    || !Number.isFinite(m.need) || m.need < 0 || !Number.isFinite(m.price) || m.price < 0)) {
+    throw new Error("Inventory data is invalid or empty.");
   }
   M.splice(0, M.length, ...rows);
   byKey_refresh();
@@ -122,6 +125,11 @@ function plan() {
   let can = Infinity, rows = "";
   for (const k in p.use) {
     const m = byKey[k], need = p.use[k] * n;
+    if (!m) {
+      can = 0;
+      rows += `<tr><td>${escapeMarkup(k)}</td><td>${fmt(need)}</td><td>Not in inventory</td><td class="shortc">Add this material to compare stock</td></tr>`;
+      continue;
+    }
     can = Math.min(can, Math.floor(m.stock / p.use[k]));
     rows += `<tr><td>${escapeMarkup(m.name)}</td><td>${fmt(need)} ${escapeMarkup(m.unit)}</td><td>${m.stock} ${escapeMarkup(m.unit)}</td>
       <td class="${need <= m.stock ? "okc" : "shortc"}">${need <= m.stock ? "Enough" : "Short by " + fmt(need - m.stock) + " " + escapeMarkup(m.unit)}</td></tr>`;

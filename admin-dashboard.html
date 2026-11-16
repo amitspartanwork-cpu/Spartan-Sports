@@ -94,6 +94,39 @@
     </section>
   </main>
 
+  <main class="dash-page demo-admin-page" id="staticAdminDemo" hidden>
+    <div class="dash-header">
+      <div>
+        <h1>Administrator preview</h1>
+        <p class="form-help">Presentation mode — this is not a real, protected admin account.</p>
+      </div>
+      <span class="role-pill">DEMO</span>
+    </div>
+
+    <div class="stats-row" aria-label="Demo status">
+      <div class="stat-card"><span>Access</span><strong>Demo</strong></div>
+      <div class="stat-card"><span>Database</span><strong>Offline</strong></div>
+      <div class="stat-card"><span>Data storage</span><strong>Browser only</strong></div>
+    </div>
+
+    <section class="section-card">
+      <h2>Import previous inventory</h2>
+      <p class="form-help">Choose an .xlsx, .xls, or .csv file. Matching names update and new names are added to this browser's preview only. Nothing is uploaded or shared.</p>
+      <div class="file-drop" id="demoDropZoneAdmin">
+        <div class="drop-icon" aria-hidden="true">📊</div>
+        <div class="drop-text">Drop a spreadsheet here or click to browse</div>
+        <input type="file" id="demoImportFileAdmin" accept=".xlsx,.xls,.csv" aria-label="Choose previous inventory spreadsheet">
+      </div>
+      <div class="import-preview" id="demoImportPreviewAdmin" hidden></div>
+      <div class="import-actions" id="demoImportActionsAdmin" hidden>
+        <button class="btn-full" id="demoApplyImportBtn" type="button">Load into browser preview</button>
+        <button class="btn-full alt" id="demoClearImportAdminBtn" type="button">Clear file</button>
+      </div>
+    </section>
+
+    <a class="btn" href="index.html">Open inventory preview</a>
+  </main>
+
   <div class="toast" id="toast" role="status"></div>
   <script src="xlsx.full.min.js"></script>
   <script src="auth.js"></script>

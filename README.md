@@ -18,4 +18,4 @@ Follow [PHP-SETUP.md](./PHP-SETUP.md) to configure the database, create the priv
 
 ## Public preview
 
-[Open the static preview](https://amitspartanwork-cpu.github.io/Storage-input-/). It uses sample data; sign-in, imports, and shared saving require a PHP/MySQL server.
+[Open the static preview](https://amitspartanwork-cpu.github.io/Spartan-Sports/). The User/Admin screens are presentation-only; imported inventory stays in this browser and is not shared.

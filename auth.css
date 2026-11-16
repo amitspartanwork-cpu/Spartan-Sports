@@ -66,6 +66,7 @@ button, input, select { font: inherit; }
   padding: 2.5rem 2rem;
   box-shadow: 0 20px 50px rgba(0,0,0,.55);
 }
+.auth-card h1,
 .auth-card h2 {
   margin: 0 0 .3rem;
   font-size: 1.7rem;
@@ -76,6 +77,18 @@ button, input, select { font: inherit; }
   margin: 0 0 2rem;
   font-size: .95rem;
 }
+.demo-notice {
+  margin: 0 0 1.2rem;
+  padding: .7rem .85rem;
+  border: 1px solid rgba(193,138,71,.45);
+  border-radius: 7px;
+  background: rgba(193,138,71,.08);
+  color: var(--bone);
+  font-size: .82rem;
+}
+.demo-login-card .import-section { margin-top: 1rem; }
+.demo-admin-page .stats-row { margin-bottom: 1.2rem; }
+.demo-admin-page .stat-card strong { font-size: 1.2rem; }
 
 /* ---- Tabs (User / Admin) ---- */
 .role-tabs {

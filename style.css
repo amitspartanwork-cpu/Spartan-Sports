@@ -289,6 +289,16 @@ select {
     color: var(--iron)
 }
 
+.cube[data-cat="Leather"] .face {
+    background: #b87349;
+    color: var(--iron)
+}
+
+.cube[data-cat="Fabric"] .face {
+    background: #527d86;
+    color: var(--bone)
+}
+
 .cube:hover .face {
     border-color: #fff
 }
